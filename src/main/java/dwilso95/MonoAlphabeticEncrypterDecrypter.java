@@ -18,7 +18,7 @@ import com.google.common.collect.HashBiMap;
  * followed by a space, and last the destination character
  * 
  */
-public class MonoAlphabeticEncrypterDecrypter {
+public class MonoAlphabeticEncrypterDecrypter extends Cipher {
 
 	/**
 	 * Bidirectional map used to store the key. Can be used as is for encryption and
@@ -33,30 +33,14 @@ public class MonoAlphabeticEncrypterDecrypter {
 	 *            format
 	 */
 	public MonoAlphabeticEncrypterDecrypter(URI keyFile) {
-		readKeyFile(keyFile);
+		initializeKeyFromFile(keyFile);
 	}
 
-	private void readKeyFile(final URI keyFile) {
-		
+	private void initializeKeyFromFile(final URI keyFile) {
 		try (final Stream<String> stream = Files.lines(Paths.get(keyFile))) {
 			stream.forEach(line -> key.putIfAbsent(line.charAt(0), line.charAt(2)));
 		} catch (IOException e) {
 			throw new RuntimeException("IOException when processing key file.", e);
-		}
-	}
-
-	/**
-	 * Read the contents of a file into a String
-	 * 
-	 * @param file
-	 *            - URI of file to read
-	 * @return the contents of the file as a String
-	 */
-	public String readFile(final URI file) {
-		try {
-			return new String(Files.readAllBytes(Paths.get(file)));
-		} catch (IOException e) {
-			throw new RuntimeException("IOException when processing text file.", e);
 		}
 	}
 
@@ -81,35 +65,6 @@ public class MonoAlphabeticEncrypterDecrypter {
 	}
 
 	/**
-	 * Encrypts the contents of the file at the given URI
-	 * 
-	 * @param file
-	 *            URI of the file to read and encrypt
-	 * @return the contents of the file, encrypted
-	 */
-	public String encrypt(final URI file) {
-		return crypt(file, Function.ENCRYPT);
-	}
-
-	/**
-	 * Decrypts the contents of the file at the given URI
-	 * 
-	 * @param file
-	 *            URI of the file to read and decrypt
-	 * @return the contents of the file, decrypted
-	 */
-	public String decrypt(final URI file) {
-		return crypt(file, Function.DECRYPT);
-	}
-
-	/**
-	 * Internal enum used as argument for specifying encrypt or decrypt
-	 */
-	private enum Function {
-		ENCRYPT, DECRYPT
-	};
-
-	/**
 	 * Responsible for encryption and decryption. Passes through all characters
 	 * outside of the English alphabet.
 	 * 
@@ -119,7 +74,7 @@ public class MonoAlphabeticEncrypterDecrypter {
 	 *            - function to apply, encrypt or decrypt
 	 * @return - the contents of the file, either encrypted or decrypted
 	 */
-	private String crypt(final URI file, final Function cryptFunction) {
+	protected String crypt(final URI file, final Function cryptFunction) {
 		final StringBuffer result = new StringBuffer();
 		final char[] chars = readFile(file).toCharArray();
 
