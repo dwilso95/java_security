@@ -118,7 +118,8 @@ public class Driver {
 			new MonoAlphabeticCipher().generateKeyFile(outputFile, inputFile);
 			return;
 		case "vernam":
-			// VernamEncrypterDecrypter.generateKeyFile(keyLength, keyLocation);
+			new VernamCipher().generateKeyFile(outputFile, inputFile);
+			return;
 		default:
 			throw new IllegalArgumentException("Unsupported cipher type [" + cipherType + "]");
 		}
@@ -129,7 +130,7 @@ public class Driver {
 		case "mono":
 			return new MonoAlphabeticCipher();
 		case "vernam":
-			return new VernamEncrypterCipher();
+			return new VernamCipher();
 		default:
 			throw new IllegalArgumentException("Unsupported cipher type [" + cipherType + "]");
 		}
@@ -150,11 +151,7 @@ public class Driver {
 		final File vernamPlain = new File(Driver.class.getClassLoader().getResource("vernam_plaintext").getFile());
 		final File vernamCipher = new File(Driver.class.getClassLoader().getResource("vernam_ciphertext").getFile());
 
-		runDemo(new VernamEncrypterCipher(), vernamPlain, vernamKey, vernamCipher);
-
-		System.out.println("\n");
-
-		System.out.println("Executing other :");
+		runDemo(new VernamCipher(), vernamPlain, vernamKey, vernamCipher);
 
 	}
 

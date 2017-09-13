@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
  * Simple class for performing Vernam encryption
  * 
  */
-public class VernamEncrypterCipher extends Cipher {
+public class VernamCipher extends Cipher {
 
 	private static final String DEFAULT_ALGORITHM = "SHA1PRNG";
 
@@ -19,7 +19,7 @@ public class VernamEncrypterCipher extends Cipher {
 	 * 
 	 * @param keyFile
 	 */
-	public VernamEncrypterCipher() {
+	public VernamCipher() {
 	}
 
 	private List<Bit> initializeKeyFromFile(final File keyFile) {
