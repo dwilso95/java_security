@@ -1,35 +1,53 @@
 package dwilso95;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
+import com.google.common.io.Files;
 
 public class Driver {
+
+	@Parameters(commandNames = "demo", commandDescription = "Run a demo of the encryptiong algorithms")
+	public static class DemoCommand {
+	}
 
 	@Parameters(commandNames = "encrypt", commandDescription = "Run encryption algorithm")
 	public static class EncryptCommand {
 		@ParametersDelegate
 		private CipherSettings cipherSettings = new CipherSettings();
+
+		@ParametersDelegate
+		private KeyFileLocation keyFileLocation = new KeyFileLocation();
 	}
 
 	@Parameters(commandNames = "decrypt", commandDescription = "Run decryption algorithm")
 	public static class DecryptCommand {
+
+		@ParametersDelegate
+		private CipherSettings cipherSettings = new CipherSettings();
+
+		@ParametersDelegate
+		private KeyFileLocation keyFileLocation = new KeyFileLocation();
+	}
+
+	@Parameters(commandNames = "generateKey", commandDescription = "Generate key files")
+	public static class KeyCommand {
 		@ParametersDelegate
 		private CipherSettings cipherSettings = new CipherSettings();
 	}
 
-	public static class CipherSettings {
-		@Parameter(names = {
-				"-cipher" }, description = "Cipher to use. Valid values are 'mono', 'vernam', and 'other'", required = false)
-		private String cipher;
-
+	public static class KeyFileLocation {
 		@Parameter(names = { "-keyFile", "-k" }, description = "Key file location", required = false)
 		private String keyFile;
+	}
+
+	public static class CipherSettings {
+		@Parameter(names = {
+				"-cipher" }, description = "Cipher to use. Valid values are 'mono', 'vernam', and ''", required = false)
+		private String cipher;
 
 		@Parameter(names = { "-inputFile", "-i" }, description = "Input file location", required = false)
 		private String inputFile;
@@ -41,13 +59,17 @@ public class Driver {
 		private boolean help = false;
 	}
 
-	public static void main(String[] args) throws URISyntaxException {
+	public static void main(String[] args) throws Exception {
 		final EncryptCommand encryptCommand = new EncryptCommand();
 		final DecryptCommand decryptCommand = new DecryptCommand();
-		final JCommander j = JCommander.newBuilder().addCommand(encryptCommand).addCommand(decryptCommand).build();
+		final KeyCommand keyCommand = new KeyCommand();
+		final DemoCommand demoCommand = new DemoCommand();
+		final JCommander j = JCommander.newBuilder().addCommand(demoCommand).addCommand(decryptCommand)
+				.addCommand(keyCommand).addCommand(encryptCommand).build();
 		j.parse(args);
 
 		if (decryptCommand.cipherSettings.help) {
+			System.out.println(1);
 			j.usage("decrypt");
 			System.exit(0);
 		} else if (encryptCommand.cipherSettings.help) {
@@ -55,42 +77,92 @@ public class Driver {
 			System.exit(0);
 		}
 
-		switch ("") {
-		case "mono":
-			System.out.println("Executing Part 1:");
+		final String commandChosen = j.getParsedCommand();
 
-			final URI monoKeyFile = Driver.class.getClassLoader().getResource("mono_key").toURI();
-			final URI monoPlainTextFile = Driver.class.getClassLoader().getResource("mono_plaintext").toURI();
-			final URI monoCipherTextFile = Driver.class.getClassLoader().getResource("mono_ciphertext").toURI();
-
-			final Cipher monoEncrypter = new MonoAlphabeticEncrypterDecrypter(monoKeyFile);
-			System.out.println("<--- Key --->\n" + monoEncrypter.getKey());
-			System.out.println("<--- Plain Text --->\n" + monoEncrypter.readFile(monoPlainTextFile));
-			System.out.println("<--- Cipher Text --->\n" + monoEncrypter.encrypt(monoPlainTextFile));
-			System.out.println("<--- Decrypted Cipher Text --->\n" + monoEncrypter.decrypt(monoCipherTextFile));
-
-			break;
-		case "vernam":
-			System.out.println("Executing Part 2:");
-
-			final URI vernamPlainTextFile = Driver.class.getClassLoader().getResource("vernam_plaintext").toURI();
-			final URI vernamCipherTextFile = Driver.class.getClassLoader().getResource("vernam_ciphertext").toURI();
-			final File vernamKeyFile = new File("vernam_keyfile");
-			vernamKeyFile.deleteOnExit();
-
-			VernamEncrypterDecrypter.generateKeyFile(1000, vernamKeyFile.toURI());
-			final Cipher vernamEncrypter = new VernamEncrypterDecrypter(vernamKeyFile.toURI());
-			System.out.println("<--- Plain Text --->\n" + vernamEncrypter.readFile(vernamPlainTextFile));
-			System.out.println("<--- Cipher Text --->\n" + vernamEncrypter.encrypt(vernamPlainTextFile));
-			System.out.println("<--- Decrypted Cipher Text --->\n" + vernamEncrypter.decrypt(vernamCipherTextFile));
-
-			break;
-		case "other":
-			break;
-		default:
-			break;
+		if (commandChosen.toLowerCase().equals("demo")) {
+			runDemo();
+			System.exit(0);
 		}
 
+		if (commandChosen.toLowerCase().equals("generatekey")) {
+			generate(keyCommand);
+			System.exit(0);
+		}
+
+		final String output;
+		final Cipher cipher;
+		switch (commandChosen) {
+		case "encrypt":
+			cipher = getCipher(encryptCommand.cipherSettings.cipher);
+			output = cipher.encrypt(new File(encryptCommand.keyFileLocation.keyFile),
+					new File(encryptCommand.cipherSettings.inputFile));
+			break;
+		case "decrypt":
+			cipher = getCipher(decryptCommand.cipherSettings.cipher);
+			output = cipher.decrypt(new File(encryptCommand.keyFileLocation.keyFile),
+					new File(decryptCommand.cipherSettings.inputFile));
+			break;
+		default:
+			throw new IllegalArgumentException("Provided command [" + commandChosen + "] is unknown.");
+		}
+		Files.write(output.getBytes(), new File(encryptCommand.cipherSettings.outputFile));
+	}
+
+	private static void generate(final KeyCommand keyCommand) {
+		final String cipherType = keyCommand.cipherSettings.cipher;
+		final File inputFile = new File(keyCommand.cipherSettings.inputFile);
+		final File outputFile = new File(keyCommand.cipherSettings.outputFile);
+
+		switch (cipherType) {
+		case "mono":
+			new MonoAlphabeticCipher().generateKeyFile(outputFile, inputFile);
+			return;
+		case "vernam":
+			// VernamEncrypterDecrypter.generateKeyFile(keyLength, keyLocation);
+		default:
+			throw new IllegalArgumentException("Unsupported cipher type [" + cipherType + "]");
+		}
+	}
+
+	private static Cipher getCipher(final String cipherType) {
+		switch (cipherType) {
+		case "mono":
+			return new MonoAlphabeticCipher();
+		case "vernam":
+			return new VernamEncrypterCipher();
+		default:
+			throw new IllegalArgumentException("Unsupported cipher type [" + cipherType + "]");
+		}
+	}
+
+	private static void runDemo() throws Exception {
+		System.out.println("Executing Mono Alphabetic:");
+		final File monoKey = new File(Driver.class.getClassLoader().getResource("mono_key").getFile());
+		final File monoPlain = new File(Driver.class.getClassLoader().getResource("mono_plaintext").getFile());
+		final File monoCipher = new File(Driver.class.getClassLoader().getResource("mono_ciphertext").getFile());
+		runDemo(new MonoAlphabeticCipher(), monoPlain, monoKey, monoCipher);
+
+		System.out.println("\n");
+
+		System.out.println("Executing Vernam:");
+
+		final File vernamKey = new File(Driver.class.getClassLoader().getResource("vernam_keyfile").getFile());
+		final File vernamPlain = new File(Driver.class.getClassLoader().getResource("vernam_plaintext").getFile());
+		final File vernamCipher = new File(Driver.class.getClassLoader().getResource("vernam_ciphertext").getFile());
+
+		runDemo(new VernamEncrypterCipher(), vernamPlain, vernamKey, vernamCipher);
+
+		System.out.println("\n");
+
+		System.out.println("Executing other :");
+
+	}
+
+	private static void runDemo(final Cipher cipher, final File plainText, final File keyFile, final File cipherFile) {
+		System.out.println("<--- Plain Text --->\n" + Cipher.readFile(plainText));
+		System.out.println("<--- Key --->\n" + cipher.printKey(keyFile));
+		System.out.println("<--- Cipher Text --->\n" + cipher.encrypt(keyFile, plainText));
+		System.out.println("<--- Decrypted Cipher Text --->\n" + cipher.decrypt(keyFile, cipherFile));
 	}
 
 }
