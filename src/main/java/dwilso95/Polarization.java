@@ -23,10 +23,10 @@ public enum Polarization {
 		switch (this) {
 		case HORIZONTAL:
 		case BACK_SLASH:
-			return Bit.ZERO;
+			return Bit.ONE;
 		case VERTICAL:
 		case FORWARD_SLASH:
-			return Bit.ONE;
+			return Bit.ZERO;
 		default:
 			throw new RuntimeException("Unsupported enum value: " + this.name());
 		}

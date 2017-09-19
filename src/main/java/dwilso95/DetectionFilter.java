@@ -16,19 +16,19 @@ public enum DetectionFilter {
 		switch (this) {
 		case DIAGONAL:
 			switch (polarization) {
-			case BACK_SLASH:
+			case HORIZONTAL:
 			case FORWARD_SLASH:
 				return Bit.ZERO;
-			case HORIZONTAL:
 			case VERTICAL:
+			case BACK_SLASH:
 				return Bit.ONE;
 			}
 		case RECTILINEAER:
 			switch (polarization) {
-			case BACK_SLASH:
 			case FORWARD_SLASH:
-				return Bit.ONE;
 			case HORIZONTAL:
+				return Bit.ONE;
+			case BACK_SLASH:
 			case VERTICAL:
 				return Bit.ZERO;
 			}
