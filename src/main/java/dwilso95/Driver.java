@@ -18,7 +18,7 @@ public class Driver {
 	public static class VernamCipherDemoCommand {
 	}
 
-	@Parameters(commandNames = "quantum", commandDescription = "Run a demo of the qunatum key simulator")
+	@Parameters(commandNames = "quantum", commandDescription = "Run a demo of the quantum key simulator")
 	public static class QuantumDemoCommand {
 	}
 
