@@ -56,10 +56,10 @@ public class MonoAlphabeticCipher extends Cipher {
 			if (inCharacterBounds(c)) {
 				switch (cryptFunction) {
 				case DECRYPT:
-					result.append(key.inverse().get(c).charValue());
+					result.append(key.inverse().get(Character.toUpperCase(c)).charValue());
 					break;
 				case ENCRYPT:
-					result.append(key.get(c).charValue());
+					result.append(key.get(Character.toUpperCase(c)).charValue());
 					break;
 				default:
 					throw new RuntimeException("Unknown CryptType, " + cryptFunction);
@@ -145,7 +145,7 @@ public class MonoAlphabeticCipher extends Cipher {
 	 * @return boolean
 	 */
 	private boolean inCharacterBounds(final Character c) {
-		return (c > 64 && c < 91) || (c > 97 && c < 123);
+		return (c > 64 && c < 91) || (c > 96 && c < 123);
 	}
 
 	private BiMap<Character, Character> initializeKeyFromFile(final File keyFile) {

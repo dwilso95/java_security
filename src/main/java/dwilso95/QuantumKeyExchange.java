@@ -4,7 +4,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 /**
- * Class that runs a basic qunatum key exchange simulation with random data.
+ * Class that runs a basic quantum key exchange simulation with random data.
  * Allows for running with and without a listener.
  * 
  */

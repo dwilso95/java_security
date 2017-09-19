@@ -10,12 +10,16 @@ import com.google.common.io.Files;
 
 public class Driver {
 
-	@Parameters(commandNames = "demo", commandDescription = "Run a demo of the encryptiong algorithms")
-	public static class DemoCommand {
+	@Parameters(commandNames = "substitutionDemo", commandDescription = "Run a demo of the substitution cipher algorithms")
+	public static class SubstitutionCipherDemoCommand {
+	}
+
+	@Parameters(commandNames = "vernamDemo", commandDescription = "Run a demo of the Vernam cipher algorithms")
+	public static class VernamCipherDemoCommand {
 	}
 
 	@Parameters(commandNames = "quantum", commandDescription = "Run a demo of the qunatum key simulator")
-	public static class QunatumCommand {
+	public static class QuantumDemoCommand {
 	}
 
 	@Parameters(commandNames = "encrypt", commandDescription = "Run encryption algorithm")
@@ -50,7 +54,7 @@ public class Driver {
 
 	public static class CipherSettings {
 		@Parameter(names = {
-				"-cipher" }, description = "Cipher to use. Valid values are 'mono', 'vernam', and ''", required = false)
+				"-cipher" }, description = "Cipher to use. Valid values are 'substitution', 'vernam'", required = false)
 		private String cipher;
 
 		@Parameter(names = { "-inputFile", "-i" }, description = "Input file location", required = false)
@@ -67,10 +71,12 @@ public class Driver {
 		final EncryptCommand encryptCommand = new EncryptCommand();
 		final DecryptCommand decryptCommand = new DecryptCommand();
 		final KeyCommand keyCommand = new KeyCommand();
-		final DemoCommand demoCommand = new DemoCommand();
-		final QunatumCommand quantumCommand = new QunatumCommand();
-		final JCommander j = JCommander.newBuilder().addCommand(quantumCommand).addCommand(demoCommand)
-				.addCommand(decryptCommand).addCommand(keyCommand).addCommand(encryptCommand).build();
+		final SubstitutionCipherDemoCommand subDemoCommand = new SubstitutionCipherDemoCommand();
+		final VernamCipherDemoCommand vernamDemoCommand = new VernamCipherDemoCommand();
+		final QuantumDemoCommand quantumCommand = new QuantumDemoCommand();
+		final JCommander j = JCommander.newBuilder().addCommand(quantumCommand).addCommand(subDemoCommand)
+				.addCommand(vernamDemoCommand).addCommand(decryptCommand).addCommand(keyCommand)
+				.addCommand(encryptCommand).build();
 		j.parse(args);
 
 		if (decryptCommand.cipherSettings.help) {
@@ -84,8 +90,13 @@ public class Driver {
 
 		final String commandChosen = j.getParsedCommand();
 
-		if (commandChosen.toLowerCase().equals("demo")) {
-			runDemo();
+		if (commandChosen.toLowerCase().equals("substitutiondemo")) {
+			runSubstitutionDemo();
+			System.exit(0);
+		}
+
+		if (commandChosen.toLowerCase().equals("vernamdemo")) {
+			runVernamDemo();
 			System.exit(0);
 		}
 
@@ -124,7 +135,7 @@ public class Driver {
 		final File outputFile = new File(keyCommand.cipherSettings.outputFile);
 
 		switch (cipherType) {
-		case "mono":
+		case "substitution":
 			new MonoAlphabeticCipher().generateKeyFile(outputFile, inputFile);
 			return;
 		case "vernam":
@@ -137,7 +148,7 @@ public class Driver {
 
 	private static Cipher getCipher(final String cipherType) {
 		switch (cipherType) {
-		case "mono":
+		case "substitution":
 			return new MonoAlphabeticCipher();
 		case "vernam":
 			return new VernamCipher();
@@ -147,35 +158,36 @@ public class Driver {
 	}
 
 	private static void runQuantumDemo() throws Exception {
-		System.out.println("Executing Qunatum Key Simulator:");
+		System.out.println("Executing Quantum Key Simulator:");
 
 		System.out.println("\nRunning without Eve eavesdropping:");
 		new QuantumKeyExchange().run(false);
 
-		System.out.println("\nRunning with Eve eavesdropping:");
+		System.out.println("\n\nRunning with Eve eavesdropping:");
 		new QuantumKeyExchange().run(true);
 	}
 
-	private static void runDemo() throws Exception {
-		System.out.println("Executing Mono Alphabetic:");
+	private static void runSubstitutionDemo() throws Exception {
+		System.out.println("Executing Substitution Cipher Demo:");
 		final File monoKey = new File(Driver.class.getClassLoader().getResource("mono_key").getFile());
 		final File monoPlain = new File(Driver.class.getClassLoader().getResource("mono_plaintext").getFile());
 		final File monoCipher = new File(Driver.class.getClassLoader().getResource("mono_ciphertext").getFile());
-		runDemo(new MonoAlphabeticCipher(), monoPlain, monoKey, monoCipher);
+		runCipherDemo(new MonoAlphabeticCipher(), monoPlain, monoKey, monoCipher);
 
-		System.out.println("\n");
+	}
 
-		System.out.println("Executing Vernam:");
+	private static void runVernamDemo() throws Exception {
+		System.out.println("Executing Vernam Cipher Demo:");
 
 		final File vernamKey = new File(Driver.class.getClassLoader().getResource("vernam_keyfile").getFile());
 		final File vernamPlain = new File(Driver.class.getClassLoader().getResource("vernam_plaintext").getFile());
 		final File vernamCipher = new File(Driver.class.getClassLoader().getResource("vernam_ciphertext").getFile());
 
-		runDemo(new VernamCipher(), vernamPlain, vernamKey, vernamCipher);
+		runCipherDemo(new VernamCipher(), vernamPlain, vernamKey, vernamCipher);
 
 	}
 
-	private static void runDemo(final Cipher cipher, final File plainText, final File keyFile, final File cipherFile) {
+	private static void runCipherDemo(final Cipher cipher, final File plainText, final File keyFile, final File cipherFile) {
 		System.out.println("<--- Plain Text --->\n" + Cipher.readFile(plainText));
 		System.out.println("<--- Key --->\n" + cipher.printKey(keyFile));
 		System.out.println("<--- Cipher Text --->\n" + cipher.encrypt(keyFile, plainText));

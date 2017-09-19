@@ -13,7 +13,7 @@ public abstract class Cipher {
 	 *            - File of file to read
 	 * @return the contents of the file as a String
 	 */
-	protected static String readFile(final File file) {
+	public static String readFile(final File file) {
 		try {
 			return new String(Files.readAllBytes(file.toPath()));
 		} catch (IOException e) {
@@ -28,7 +28,7 @@ public abstract class Cipher {
 	 *            - File of the file in which to write
 	 * @return the contents of the file as a String
 	 */
-	protected static void writeFile(final File file, final String string) {
+	public static void writeFile(final File file, final String string) {
 		try {
 			Files.write(file.toPath(), string.getBytes());
 		} catch (IOException e) {
