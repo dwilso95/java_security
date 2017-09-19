@@ -14,6 +14,10 @@ public class Driver {
 	public static class DemoCommand {
 	}
 
+	@Parameters(commandNames = "quantum", commandDescription = "Run a demo of the qunatum key simulator")
+	public static class QunatumCommand {
+	}
+
 	@Parameters(commandNames = "encrypt", commandDescription = "Run encryption algorithm")
 	public static class EncryptCommand {
 		@ParametersDelegate
@@ -64,8 +68,9 @@ public class Driver {
 		final DecryptCommand decryptCommand = new DecryptCommand();
 		final KeyCommand keyCommand = new KeyCommand();
 		final DemoCommand demoCommand = new DemoCommand();
-		final JCommander j = JCommander.newBuilder().addCommand(demoCommand).addCommand(decryptCommand)
-				.addCommand(keyCommand).addCommand(encryptCommand).build();
+		final QunatumCommand quantumCommand = new QunatumCommand();
+		final JCommander j = JCommander.newBuilder().addCommand(quantumCommand).addCommand(demoCommand)
+				.addCommand(decryptCommand).addCommand(keyCommand).addCommand(encryptCommand).build();
 		j.parse(args);
 
 		if (decryptCommand.cipherSettings.help) {
@@ -81,6 +86,11 @@ public class Driver {
 
 		if (commandChosen.toLowerCase().equals("demo")) {
 			runDemo();
+			System.exit(0);
+		}
+
+		if (commandChosen.toLowerCase().equals("quantum")) {
+			runQuantumDemo();
 			System.exit(0);
 		}
 
@@ -134,6 +144,16 @@ public class Driver {
 		default:
 			throw new IllegalArgumentException("Unsupported cipher type [" + cipherType + "]");
 		}
+	}
+
+	private static void runQuantumDemo() throws Exception {
+		System.out.println("Executing Qunatum Key Simulator:");
+
+		System.out.println("\nRunning without Eve eavesdropping:");
+		new QuantumKeyExchange().run(false);
+
+		System.out.println("\nRunning with Eve eavesdropping:");
+		new QuantumKeyExchange().run(true);
 	}
 
 	private static void runDemo() throws Exception {

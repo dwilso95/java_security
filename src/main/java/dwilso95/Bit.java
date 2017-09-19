@@ -13,9 +13,9 @@ public enum Bit {
 
 	public final String toString() {
 		switch (this) {
-		case ONE:
-			return "0";
 		case ZERO:
+			return "0";
+		case ONE:
 			return "1";
 		default:
 			return "";
