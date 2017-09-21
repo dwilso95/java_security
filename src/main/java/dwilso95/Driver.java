@@ -3,6 +3,7 @@ package dwilso95;
 import java.io.File;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
@@ -77,7 +78,14 @@ public class Driver {
 		final JCommander j = JCommander.newBuilder().addCommand(quantumCommand).addCommand(subDemoCommand)
 				.addCommand(vernamDemoCommand).addCommand(decryptCommand).addCommand(keyCommand)
 				.addCommand(encryptCommand).build();
-		j.parse(args);
+
+		try {
+			j.parse(args);
+		} catch (MissingCommandException mce) {
+			System.out.println("Unparseable command/arguments. Please see usage.");
+			j.usage();
+			System.exit(0);
+		}
 
 		if (decryptCommand.cipherSettings.help) {
 			System.out.println(1);
@@ -89,6 +97,12 @@ public class Driver {
 		}
 
 		final String commandChosen = j.getParsedCommand();
+
+		if (commandChosen == null) {
+			System.out.println("Please choose a command");
+			j.usage();
+			System.exit(0);
+		}
 
 		if (commandChosen.toLowerCase().equals("substitutiondemo")) {
 			runSubstitutionDemo();
@@ -187,7 +201,8 @@ public class Driver {
 
 	}
 
-	private static void runCipherDemo(final Cipher cipher, final File plainText, final File keyFile, final File cipherFile) {
+	private static void runCipherDemo(final Cipher cipher, final File plainText, final File keyFile,
+			final File cipherFile) {
 		System.out.println("<--- Plain Text --->\n" + Cipher.readFile(plainText));
 		System.out.println("<--- Key --->\n" + cipher.printKey(keyFile));
 		System.out.println("<--- Cipher Text --->\n" + cipher.encrypt(keyFile, plainText));
